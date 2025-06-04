@@ -26,12 +26,16 @@ https://lk.rebrainme.com/kubernetesv2/task/700
 
 Реаллизовано запуском helm charts через ansible. С добавлением некоторых кастомных манифестов.
 
-DNS: 
+DNS:  снаружи не доступно
 
-os-test.berg.ru - os
-osd-test.berg.ru - dashboard
+
+OS https://os-test.berg.ru/
+
+dashboard https://osd-test.berg.ru/
+
 
 OS admin user: admin:password
+
 OS logs collector user: log_writer:LogWriterPassword
 
 
