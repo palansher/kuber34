@@ -82,29 +82,27 @@ OS logs collector user: log_writer:LogWriterPassword
 
 ## Скриншоты
 
+- [curl](pics/curl.png)
+
 ```
 curl -sku admin:password -X GET https://os-test.berg.ru | jq
 
 curl -sku admin:password -X GET https://os-test.berg.ru/_cluster/health?pretty | jq
 ```
 
-[curl](pics/curl.png)
 
 
-
-
-
-[OS Dashboard с логами всех контейнеров кластера](pics/dashboard.png)
+- [OS Dashboard с логами всех контейнеров кластера](pics/dashboard.png)
 
 видно что в логах имеются поля от Kubernetes фильтра из fluentbit
 
-[ноды](pics/nodes.png)
+- [ноды](pics/nodes.png)
 
-[pods](pics/pods.png)
+- [pods](pics/pods.png)
 
-[pvc](pics/pvc.png)
+- [pvc](pics/pvc.png)
 
-[services](pics/services.png)
+- [services](pics/services.png)
 
 
 ## некоторые объекты
