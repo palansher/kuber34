@@ -49,7 +49,7 @@ OS logs collector user: log_writer:LogWriterPassword
 Надюсь, буду прощен, так как Ingress and Basicauth я успешно воплощал в предыдущих заданиях. Если потребутся для макс оценки - переделаю.
 
 
-### Непонятное поведение в логах fluent-bit
+### 4 Непонятное поведение в логах fluent-bit
 
 Со старта контейнера fluentbit его логи показывают что запись в OS усшена
 
@@ -82,11 +82,13 @@ OS logs collector user: log_writer:LogWriterPassword
 
 ## Скриншоты
 
+```
 curl -sku admin:password -X GET https://os-test.berg.ru | jq
 
 curl -sku admin:password -X GET https://os-test.berg.ru/_cluster/health?pretty | jq
+```
 
-[curl](pics/curl.log)
+[curl](pics/curl.png)
 
 
 
