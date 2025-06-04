@@ -1,0 +1,34 @@
+# Istio виртуальный сераис для OpenSearch port 9200
+
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: opensearch-vs
+  namespace: logging
+spec:
+  hosts:
+  - "os-test.berg.ru"
+  gateways:
+  - istio-system/https-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: opensearch-cluster-master.logging.svc.cluster.local
+        port:
+          number: 9200
+    corsPolicy:
+      allowOrigins:
+      - exact: "*"
+      allowMethods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - HEAD
+      - OPTIONS
+      allowHeaders:
+      - "*"
+    timeout: 60s

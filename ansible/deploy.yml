@@ -1,0 +1,31 @@
+---
+- name: Set common vars
+  hosts: control_node
+  tasks:
+    - name: Include dir vars
+      tags: always
+      ansible.builtin.include_vars:
+        dir: "{{ item }}"
+      loop:
+        - vars
+
+    - ansible.builtin.debug:
+        msg:
+          - "env: {{ env }}"
+          - "kub_context: {{ kub_context }}"
+
+- name: Setup nodes
+  tags: set-nodes
+  ansible.builtin.import_playbook: set-all-nodes.yml
+
+- name: Set Services
+  become: true
+  become_user: vp
+  hosts: control_node
+  tasks:
+    - name: Kuber tasks
+      tags: always
+      ansible.builtin.include_tasks:
+        apply:
+          tags: kuber
+        file: kuber-tasks.yml

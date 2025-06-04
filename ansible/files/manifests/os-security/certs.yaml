@@ -1,0 +1,145 @@
+#  subject:
+# organizations:
+#   - "Berg"
+# organizationalUnits:
+#   - "IT dep"
+# localities:
+#   - "Moscow"
+# countries:
+#   - "RU"
+
+# - "CN=nodes*,OU=IT dep,O=Berg,L=Moscow,C=RU"
+
+---
+# Выписывает сертификаты в namespace
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: selfsigned-issuer
+  namespace: logging
+spec:
+  selfSigned: {}
+---
+# Самоподписанный сертификат для CA
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ca
+  # namespace: logging
+spec:
+  isCA: true
+  duration: 87600h # 10y
+  subject:
+    organizations:
+      - "Berg"
+    organizationalUnits:
+      - "IT dep"
+    localities:
+      - "Moscow"
+    countries:
+      - "RU"
+  commonName: Opensearch CA
+  secretName: ca-secret
+  privateKey:
+    algorithm: RSA
+    # для OS требуется именно encoding: PKCS8
+    encoding: PKCS8
+    size: 4096
+  issuerRef:
+    name: selfsigned-issuer
+    kind: Issuer
+    group: cert-manager.io
+
+---
+apiVersion: cert-manager.io/v1
+# выписывает сертификаты, пдписанные нашим CA
+kind: Issuer
+metadata:
+  name: opensearch-issuer
+  # namespace: logging
+spec:
+  ca:
+    secretName: ca-secret
+
+---
+# Один сертификат для ВСЕХ нод opensearch
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: master-cert
+  # namespace: logging
+spec:
+  # содержит серт+ ключ + серт CA, который подписал
+  secretName: master-tls
+
+  duration: 43830h # 5y
+  renewBefore: 360h # 15d
+
+  commonName: nodes
+  subject:
+    organizations:
+      - "Berg"
+    organizationalUnits:
+      - "IT dep"
+    localities:
+      - "Moscow"
+    countries:
+      - "RU"
+
+  isCA: false
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS8
+    rotationPolicy: Always
+    size: 4096
+  usages:
+    #  и для серверов и для клиентов
+    - server auth
+    - client auth
+  dnsNames:
+    - localhost
+    # .brg.loc
+    - osapi.vp.local
+    - kibana.vp.local
+  ipAddresses:
+    - 127.0.0.1
+  issuerRef:
+    group: cert-manager.io
+    kind: Issuer
+    name: opensearch-issuer
+---
+# Супер Сертификат администратора opensearch
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: admin-cert
+  # namespace: logging
+spec:
+  secretName: admin-tls
+
+  duration: 43830h # 5y
+  renewBefore: 360h # 15d
+
+  commonName: vp
+  subject:
+    organizations:
+      - "Berg"
+    organizationalUnits:
+      - "IT dep"
+    localities:
+      - "Moscow"
+    countries:
+      - "RU"
+
+  isCA: false
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS8
+    rotationPolicy: Always
+    size: 4096
+  usages:
+    - client auth
+  issuerRef:
+    group: cert-manager.io
+    kind: Issuer
+    name: opensearch-issuer

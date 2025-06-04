@@ -1,0 +1,33 @@
+---
+- name: Prepare all nodes
+  hosts: worker_nodes
+  become: true
+  become_user: root
+
+  tasks:
+    - name: show node info
+      ansible.builtin.debug:
+        var: "{{ item }}"
+      loop:
+        - ansible_hostname
+        - ansible_env.USER
+        - os_data_dir
+      loop_control:
+        label: "{{ item }}"
+
+    - name: Get current vm.max_map_count value
+      command: sysctl -n vm.max_map_count
+      register: current_vm_max_map_count
+      changed_when: false
+
+    - name: Display current vm.max_map_count
+      debug:
+        msg: "Current vm.max_map_count is {{ current_vm_max_map_count.stdout }}"
+
+    - name: Set vm.max_map_count to {{ sysctl_vm_max_map_count }} if the current is less
+      ansible.posix.sysctl:
+        name: vm.max_map_count
+        value: "{{ sysctl_vm_max_map_count }}"
+        state: present
+        reload: true
+      when: current_vm_max_map_count.stdout|int < sysctl_vm_max_map_count|int

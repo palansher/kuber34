@@ -1,0 +1,27 @@
+---
+- name: fluent-bit Security Manifests
+  kubernetes.core.k8s:
+    context: "{{ kub_context }}"
+    state: present
+    namespace: "{{ os_namespace }}"
+    src: "{{ item }}"
+    apply: true
+  loop:
+    - manifests/fluentbit/secrets.yaml
+
+- name: Add  chart repo https://fluent.github.io/helm-charts
+  kubernetes.core.helm_repository:
+    context: "{{ kub_context }}"
+    name: fluent
+    repo_url: "https://fluent.github.io/helm-charts"
+
+- name: Deploy fluent-bit
+  kubernetes.core.helm:
+    name: fluent-bit-logging
+    context: "{{ kub_context }}"
+    update_repo_cache: true
+    chart_ref: fluent/fluent-bit
+    release_namespace: logging
+    atomic: true
+    wait: true
+    values_files: "{{ values_files_fluent_bit }}"

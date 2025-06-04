@@ -1,0 +1,41 @@
+---
+all:
+  vars:
+    root_data_dir: /usr/share/vp-proj
+    delete_volumes: false
+    os_data_dir: "{{ root_data_dir }}/{{ os_node }}/opensearch/data"
+    sysctl_vm_max_map_count: 262144
+
+  children:
+    worker_nodes:
+      hosts:
+        vs-k8s-gsa-dev-w01:
+          ansible_host: vs-k8s-gsa-dev-w01.brg.loc
+        vs-k8s-gsa-dev-w02:
+          ansible_host: vs-k8s-gsa-dev-w02.brg.loc
+        vs-k8s-gsa-dev-w03:
+          ansible_host: vs-k8s-gsa-dev-w03.brg.loc
+      vars:
+        os_nodes:
+          - vs-k8s-gsa-dev-w01
+          - vs-k8s-gsa-dev-w02
+          - vs-k8s-gsa-dev-w03
+
+    control_node:
+      hosts:
+        localhost:
+          ansible_host: localhost
+          ansible_python_interpreter: /home/vp/.local/share/pipx/venvs/ansible/bin/python3
+          ansible_connection: local
+          # vars:
+          kub_context: GSA-DEV
+          #   # become_user: vp
+          values_files_os_master:
+            - "{{ playbook_dir }}/files/helm/opensearch/values-master.yaml"
+          values_files_os_data:
+            - "{{ playbook_dir }}/files/helm/opensearch/values-data.yaml"
+          values_files_os_dashboard:
+            - "{{ playbook_dir }}/files/helm/opensearch/values-dashboard.yaml"
+
+          values_files_fluent_bit:
+            - "{{ playbook_dir }}/files/helm/fluentbit/values.yaml"

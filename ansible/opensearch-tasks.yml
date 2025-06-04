@@ -1,0 +1,71 @@
+---
+- name: Set OS Security Manifests
+  tags: os-security
+  kubernetes.core.k8s:
+    context: "{{ kub_context }}"
+    state: present
+    namespace: "{{ os_namespace }}"
+    src: "{{ item }}"
+  loop:
+    - manifests/os-security/certs.yaml
+    - manifests/os-security/opensearch-roles.yaml
+    - manifests/os-security/opensearch-internal-users.yaml
+    - manifests/os-security/opensearch-action-groups.yaml
+    - manifests/os-security/opensearch-tenats.yaml
+    - manifests/os-security/opensearch-roles-mapping.yaml
+    - manifests/os-security/opensearch-config.yaml
+    - manifests/os-security/dashboard-sec.yaml
+
+- name: Set OS Network Manifests
+  tags: os-network
+  kubernetes.core.k8s:
+    context: "{{ kub_context }}"
+    state: present
+    namespace: "{{ os_namespace }}"
+    src: "{{ item }}"
+  loop:
+    - manifests/os-test.berg.ru_9200-vs.yaml
+    - manifests/osd-test.berg.ru_5601-vs.yaml
+
+- name: OS release
+  tags: os-release
+  block:
+    - name: Add OS chart repo https://opensearch-project.github.io/helm-charts/
+      kubernetes.core.helm_repository:
+        context: "{{ kub_context }}"
+        name: opensearch
+        repo_url: "https://opensearch-project.github.io/helm-charts"
+
+    - name: Deploy Helm Open Search Master nodes
+      kubernetes.core.helm:
+        name: os-master
+        context: "{{ kub_context }}"
+        # kubeconfig: /home/vp/.kube/config
+        update_repo_cache: true
+        chart_ref: opensearch/opensearch
+        release_namespace: logging
+        atomic: true
+        wait: true
+        values_files: "{{ values_files_os_master }}"
+
+    - name: Deploy Helm Open Search Data nodes
+      kubernetes.core.helm:
+        name: os-data
+        context: "{{ kub_context }}"
+        update_repo_cache: true
+        chart_ref: opensearch/opensearch
+        release_namespace: logging
+        atomic: true
+        wait: true
+        values_files: "{{ values_files_os_data }}"
+
+    - name: Deploy Helm Open Search Dashboard
+      kubernetes.core.helm:
+        name: os-dashboard
+        context: "{{ kub_context }}"
+        update_repo_cache: true
+        chart_ref: opensearch/opensearch-dashboards
+        release_namespace: logging
+        atomic: true
+        wait: true
+        values_files: "{{ values_files_os_dashboard }}"

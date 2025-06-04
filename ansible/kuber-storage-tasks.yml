@@ -1,0 +1,27 @@
+---
+- name: Deploy Helm - Rancher local path provisioner
+  kubernetes.core.helm:
+    name: local-path-storage
+    context: "{{ kub_context }}"
+    # update_repo_cache: true
+    chart_ref: "{{ playbook_dir }}/files/helm/rancher-local-path-provisioner"
+    release_namespace: local-path-storage
+    create_namespace: true
+    atomic: true
+    wait: true
+
+- name: Verify local path provisioner pod are running
+  kubernetes.core.k8s_info:
+    kind: Pod
+    namespace: local-path-storage
+  register: local_path_storage_pods
+
+- name: Display local path provisioner pod status
+  debug:
+    var: (local_path_storage_pods.resources | first).status.phase
+
+- name: Ensure all local path provisioner pod is running
+  assert:
+    that:
+      - "'Running' in local_path_storage_pods.resources | map(attribute='status.phase') | list"
+    fail_msg: "Not all local path provisioner pods are running"

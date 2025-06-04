@@ -1,0 +1,54 @@
+---
+- name: Add repo jetstack https://charts.jetstack.io
+  kubernetes.core.helm_repository:
+    context: "{{ kub_context }}"
+    name: jetstack
+    repo_url: "https://charts.jetstack.io"
+    force_update: false
+
+- name: Install cert-manager CRDs (v1.17.2)
+  community.kubernetes.k8s:
+    state: present
+    src: "https://github.com/cert-manager/cert-manager/releases/download/v1.17.2/cert-manager.crds.yaml"
+
+- name: Deploy Cert Manager Helm chart jetstack/cert-manager
+  kubernetes.core.helm:
+    name: cert-manager
+    context: "{{ kub_context }}"
+    update_repo_cache: true
+    chart_ref: jetstack/cert-manager
+    # chart_version: v1.17.2
+    release_namespace: cert-manager
+    create_namespace: true
+    reuse_values: true
+
+    values:
+      crds:
+        enabled: true
+      prometheus:
+        enabled: false # Set to true if you need Prometheus metrics
+
+- name: Verify cert-manager pods are running
+  kubernetes.core.k8s_info:
+    kind: Pod
+    namespace: cert-manager
+  register: cert_manager_pods
+
+- name: Display pod status
+  debug:
+    var: cert_manager_pods.resources[].status.phase
+
+- name: Ensure all pods are running
+  assert:
+    that:
+      - "'Running' in cert_manager_pods.resources | map(attribute='status.phase') | list"
+    fail_msg: "Not all cert-manager pods are running"
+
+- name: Check cert-manager version
+  command: kubectl get deployment -n cert-manager cert-manager -o jsonpath='{.spec.template.spec.containers[0].image}'
+  register: cert_manager_image
+  changed_when: false
+
+- name: Display cert-manager version
+  debug:
+    var: cert_manager_image.stdout

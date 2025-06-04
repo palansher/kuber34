@@ -1,0 +1,11 @@
+---
+# local_user: vp
+
+env: berg # rebrain
+
+
+nodes_dn: "CN=nodes*,OU=IT dep,O=Berg,L=Moscow,C=RU"
+
+admin_dn: "CN=vp,OU=IT dep,O=Berg,L=Moscow,C=RU"
+
+os_namespace: logging

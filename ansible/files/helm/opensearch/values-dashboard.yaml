@@ -1,0 +1,93 @@
+opensearchHosts: "https://opensearch-cluster-master:9200"
+replicaCount: 1
+
+fullnameOverride: "dashboard"
+
+secretMounts:
+  - name: certs
+    secretName: master-tls
+    path: /usr/share/opensearch-dashboards/certs
+
+envFrom:
+  - secretRef:
+      name: dashboard-user
+
+config:
+  opensearch_dashboards.yml: |
+    server:
+      name: dashboards
+      host: 0.0.0.0
+      ssl:
+        enabled: false
+        key: /usr/share/opensearch-dashboards/certs/tls.key
+        certificate: /usr/share/opensearch-dashboards/certs/tls.crt
+    opensearch:
+      ssl:
+        certificateAuthorities: /usr/share/opensearch-dashboards/certs/ca.crt
+        verificationMode: certificate
+
+serverHost: "0.0.0.0"
+
+ingress:
+  enabled: false
+  annotations: {}
+  ingressClassName: "system-ingress"
+  hosts:
+    - host: kibana.kryukov.local
+      paths:
+        - path: /
+          backend:
+            serviceName: dashboard
+            servicePort: 5601
+  tls:
+    - secretName: master-tls
+      hosts:
+        - kibana.kryukov.local
+
+resources:
+  requests:
+    cpu: "1000m"
+    memory: "512M"
+  limits:
+    cpu: "2000m"
+    memory: "1024M"
+
+
+# # Startup Probe - Gives the container ample time to initialize
+# startupProbe:
+#   tcpSocket: null # переопределяем умолчание в дефолтном values.yaml. Т.к. не позволено более одного handler type для пробы.
+#   httpGet:
+#     path: /api/status
+#     port: 5601
+#     scheme: HTTP
+#   initialDelaySeconds: 10 # Start checking after 10 seconds
+#   periodSeconds: 10 # Check every 10 seconds
+#   failureThreshold: 30 # Allow up to 5 minutes to start (30*10s)
+#   successThreshold: 1
+#   timeoutSeconds: 5
+
+# # Liveness Probe - Checks if the container is running properly
+# livenessProbe:
+#   tcpSocket: null
+#   httpGet:
+#     path: /api/status
+#     port: 5601
+#     scheme: HTTP
+#   initialDelaySeconds: 60 # Wait after container starts
+#   periodSeconds: 30 # Check every 30 seconds
+#   failureThreshold: 3 # After 3 failures, restart
+#   successThreshold: 1
+#   timeoutSeconds: 10
+
+# # Readiness Probe - Checks if the container can serve traffic
+# readinessProbe:
+#   tcpSocket: null
+#   httpGet:
+#     path: /api/status
+#     port: 5601
+#     scheme: HTTP
+#   initialDelaySeconds: 30 # Start checking sooner than liveness
+#   periodSeconds: 10 # Check more frequently than liveness
+#   failureThreshold: 3 # After 3 failures, mark as not ready
+#   successThreshold: 1
+#   timeoutSeconds: 5

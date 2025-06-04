@@ -1,0 +1,73 @@
+---
+- name: Debug working ENV
+  tags: always
+  block:
+    - name: debug
+      changed_when: false
+      ansible.builtin.shell:
+        cmd: |
+
+          hostname
+          whoami
+          pwd
+          echo $USER
+          echo $HOME
+          echo "K8S_AUTH_CONTEXT=$K8S_AUTH_CONTEXT"
+          echo "K8S_AUTH_KUBECONFIG=$K8S_AUTH_KUBECONFIG"
+          echo "KUBECONFIG=$KUBECONFIG"
+      register: shell
+
+    - name: show
+      ansible.builtin.debug:
+        var: shell.stdout_lines
+
+- name: Create namespace '{{ os_namespace }}'
+  kubernetes.core.k8s:
+    name: "{{ os_namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Cert-manager Tasks
+  tags: cert-manager
+  ansible.builtin.include_tasks:
+    apply:
+      tags: cert-manager
+    file: cert-manager-tasks.yml
+
+- name: Storage Tasks
+  tags: kuber-storage
+  ansible.builtin.include_tasks:
+    apply:
+      tags: kuber-storage
+    file: kuber-storage-tasks.yml
+
+- name: Opensearch Tasks
+  tags: [opensearch, os-security, os-network, os-release]
+  ansible.builtin.include_tasks:
+    apply:
+      tags: opensearch
+    file: opensearch-tasks.yml
+
+- name: fluent-bit tasks
+  tags: fluent-bit
+  ansible.builtin.include_tasks:
+    apply:
+      tags: fluent-bit
+    file: fluent-bit-tasks.yml
+
+- name: Show pod's status
+  tags: always
+  block:
+    - name: Verify pods in logging namespace are running
+      kubernetes.core.k8s_info:
+        kind: Pod
+        namespace: logging
+      register: logging_pods
+
+    - name: Display logging namespace pod status
+      debug:
+        msg: "{{ item.status.phase }}"
+      loop: "{{ logging_pods.resources }}"
+      loop_control:
+        label: "{{ item.metadata.name }}"

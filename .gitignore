@@ -1,0 +1,6 @@
+/secrets
+*.tgz
+
+opensearch-cluster
+opensearch-operator
+opensearch-k8s-operator
